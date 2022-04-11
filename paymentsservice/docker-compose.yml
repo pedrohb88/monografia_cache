@@ -23,14 +23,18 @@ services:
     volumes:
       - mysql_payments_database_cache:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
+  cache: 
+    image: memcached
+    ports: 
+      - "11212:11211"
   app:
     build:
       context: ./app
     ports:
-      - "3336:3336"
+      - "3335:3335"
     environment:
       - DBCONN=myuser:mypass@tcp(db:3309)/database
-      - ENV=production
+      - ENV=invoiceion
     depends_on:
       db: 
         condition: service_healthy

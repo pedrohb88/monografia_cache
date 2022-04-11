@@ -2,35 +2,30 @@ package payments
 
 import (
 	"fmt"
+	db "monografia/lib/database"
 	"monografia/model"
 
 	"github.com/go-gorp/gorp"
 )
 
 var (
-	queryPaymentsBase = `
+	queryPaymentsByIDs = `
 	SELECT 
-		p.id AS ID, 
+		p.id AS ID,
 		p.amount AS Amount,
-		p.invoice_id AS InvoiceID, 
-		i.code AS InvoiceCode, 
-		i.link AS InvoiceLink
+		p.invoice_id AS InvoiceID
 	FROM payments p
-	INNER JOIN invoices i
-		ON p.invoice_id = i.id
-	%s
+	WHERE p.id IN(%s)
 	`
 
-	byID = fmt.Sprintf(queryPaymentsBase, `WHERE p.id = ?`)
-
 	execInsertPayment = `
-	INSERT INTO payments(amount)
-	VALUES (?)
+	INSERT INTO payments(amount, invoice_id) 
+	VALUES(?, ?)
 	`
 )
 
 type Payments interface {
-	GetByID(paymentID int) ([]model.Payment, error)
+	GetByIDs(paymentIDs ...int) ([]*model.Payment, error)
 	Create(payment *model.Payment) error
 }
 
@@ -42,17 +37,31 @@ func New(db *gorp.DbMap) Payments {
 	return &payments{db: db}
 }
 
-func (o *payments) GetByID(paymentID int) ([]model.Payment, error) {
-	var payments []model.Payment
+func (i *payments) GetByIDs(paymentIDs ...int) ([]*model.Payment, error) {
+	if len(paymentIDs) == 0 {
+		return nil, nil
+	}
 
-	_, err := o.db.Select(&payments, byID, paymentID)
-	return payments, err
+	var payments []*model.Payment
+
+	query := fmt.Sprintf(queryPaymentsByIDs, db.RepeatIntArgs(paymentIDs...))
+
+	iIDS := make([]interface{}, len(paymentIDs))
+	for i, id := range paymentIDs {
+		iIDS[i] = id
+	}
+
+	_, err := i.db.Select(&payments, query, iIDS...)
+	if err != nil {
+		return nil, err
+	}
+	return payments, nil
 }
 
-func (o *payments) Create(payment *model.Payment) error {
-
-	res, err := o.db.Exec(execInsertPayment,
+func (i *payments) Create(payment *model.Payment) error {
+	res, err := i.db.Exec(execInsertPayment,
 		payment.Amount,
+		payment.InvoiceID,
 	)
 	if err != nil {
 		return err

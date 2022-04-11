@@ -1,35 +1,40 @@
 package entity
 
-import "monografia/model"
+import (
+	"monografia/model"
+	pb "monografia/transport/proto"
+)
 
-type Payment struct {
-	ID      int      `json:"id"`
-	Amount  float64  `json:"amount"`
-	Invoice *Invoice `json:"invoice"`
-}
+func (e *Entity) NewBasicPayment(m *model.Payment) *pb.Payment {
 
-func NewBasicPayment(model model.Payment) *Payment {
-	return &Payment{
-		ID:     model.ID,
-		Amount: model.Amount,
+	var invoiceID int
+	if m.InvoiceID != nil {
+		invoiceID = *m.InvoiceID
+	}
+
+	return &pb.Payment{
+		Id:        int64(m.ID),
+		Amount:    float32(m.Amount),
+		InvoiceId: int64(invoiceID),
 	}
 }
 
-func NewPayments(models []model.Payment) []*Payment {
+func (e *Entity) NewPaymentByID(paymentID int) (*pb.Payment, error) {
 
-	var payments []*Payment
+	paymentModel, err := e.service.Payments.GetByID(paymentID)
+	if err != nil {
+		return nil, err
+	}
 
-	for _, model := range models {
+	payment := e.NewBasicPayment(paymentModel)
 
-		payment := NewBasicPayment(model)
-		payment.Invoice = &Invoice{
-			ID:   model.InvoiceID,
-			Code: model.InvoiceCode,
-			Link: model.InvoiceLink,
+	if paymentModel.InvoiceID != nil {
+		invoiceModel, err := e.service.Invoices.GetByID(*paymentModel.InvoiceID)
+		if err != nil {
+			return nil, err
 		}
-
-		payments = append(payments, payment)
+		payment.Invoice = e.NewBasicInvoice(invoiceModel)
 	}
 
-	return payments
+	return payment, nil
 }

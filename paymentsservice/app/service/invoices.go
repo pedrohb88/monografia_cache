@@ -1,23 +1,26 @@
 package service
 
 import (
+	"monografia/lib/errors"
 	"monografia/model"
 	"monografia/store/invoices"
-	"monografia/transport/entity"
 )
 
 type invoicesService struct {
 	invoicesStore invoices.Invoices
 }
 
-func (p *invoicesService) GetByID(invoiceID int) (*entity.Invoice, error) {
+func (p *invoicesService) GetByID(invoiceID int) (*model.Invoice, error) {
 
-	invoiceModel, err := p.invoicesStore.GetByID(invoiceID)
+	invoices, err := p.invoicesStore.GetByIDs(invoiceID)
 	if err != nil {
 		return nil, err
 	}
+	if len(invoices) == 0 {
+		return nil, errors.ErrNotFound
+	}
 
-	return entity.NewBasicInvoice(invoiceModel), nil
+	return invoices[0], nil
 }
 
 func (p *invoicesService) Create(invoice *model.Invoice) error {

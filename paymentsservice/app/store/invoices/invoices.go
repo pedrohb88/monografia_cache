@@ -2,21 +2,21 @@ package invoices
 
 import (
 	"fmt"
+	db "monografia/lib/database"
 	"monografia/model"
 
 	"github.com/go-gorp/gorp"
 )
 
 var (
-	queryInvoicesBase = `
+	queryInvoicesByIDs = `
 	SELECT 
 		i.id AS ID,
 		i.code AS Code,
 		i.link AS Link
 	FROM invoices i
-	%s`
-
-	byID = fmt.Sprintf(queryInvoicesBase, `WHERE i.id = ?`)
+	WHERE i.id IN(%s)
+	`
 
 	execInsert = `
 	INSERT INTO invoices(code, link)
@@ -25,7 +25,7 @@ var (
 )
 
 type Invoices interface {
-	GetByID(invoiceID int) (*model.Invoice, error)
+	GetByIDs(invoiceIDs ...int) ([]*model.Invoice, error)
 	Create(invoice *model.Invoice) error
 }
 
@@ -37,13 +37,26 @@ func New(db *gorp.DbMap) Invoices {
 	return &invoices{db: db}
 }
 
-func (p *invoices) GetByID(invoiceID int) (*model.Invoice, error) {
-	var invoice model.Invoice
-	err := p.db.SelectOne(&invoice, byID, invoiceID)
+func (p *invoices) GetByIDs(invoiceIDs ...int) ([]*model.Invoice, error) {
+
+	if len(invoiceIDs) == 0 {
+		return nil, nil
+	}
+
+	var invoices []*model.Invoice
+
+	query := fmt.Sprintf(queryInvoicesByIDs, db.RepeatIntArgs(invoiceIDs...))
+
+	iIDS := make([]interface{}, len(invoiceIDs))
+	for i, id := range invoiceIDs {
+		iIDS[i] = id
+	}
+
+	_, err := p.db.Select(&invoices, query, iIDS...)
 	if err != nil {
 		return nil, err
 	}
-	return &invoice, nil
+	return invoices, nil
 }
 
 func (p *invoices) Create(invoice *model.Invoice) error {

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+option go_package = "monografia/transport/proto";
+option java_multiple_files = true;
+option java_package = "io.monografia";
+option java_outer_classname = "MonografiaProto";
+
+package router;
+
+service Router {
+  rpc GetPaymentByID (ByIDRequest) returns (Payment) {}
+  rpc CreatePayment (Payment) returns (Payment) {}
+
+  rpc GetInvoiceByID (ByIDRequest) returns (Invoice) {}
+  rpc CreateInvoice (Invoice) returns (Invoice) {}
+}
+
+message ByIDRequest {
+  int64 id = 1;
+}
+
+message Payment {
+  int64 id = 1;
+  float amount = 2;
+  int64 invoice_id = 3;
+  Invoice invoice = 4;
+}
+
+message Invoice {
+  int64 id = 1;
+  string code = 2;
+  string link = 3;
+}

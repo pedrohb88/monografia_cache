@@ -1,25 +1,23 @@
 package entity
 
-import "monografia/model"
+import (
+	"monografia/model"
+	pb "monografia/transport/proto"
+)
 
-type Invoice struct {
-	ID   int    `json:"id"`
-	Code string `json:"code"`
-	Link string `json:"link"`
-}
-
-func NewBasicInvoice(i *model.Invoice) *Invoice {
-	return &Invoice{
-		ID:   i.ID,
-		Code: i.Code,
-		Link: i.Link,
+func (e *Entity) NewBasicInvoice(m *model.Invoice) *pb.Invoice {
+	return &pb.Invoice{
+		Id:   int64(m.ID),
+		Code: m.Code,
+		Link: m.Link,
 	}
 }
 
-func NewInvoices(models []*model.Invoice) []*Invoice {
-	invoices := make([]*Invoice, len(models))
-	for i, m := range models {
-		invoices[i] = NewBasicInvoice(m)
+func (e *Entity) NewInvoiceByID(invoiceID int) (*pb.Invoice, error) {
+	invoice, err := e.service.Invoices.GetByID(invoiceID)
+	if err != nil {
+		return nil, err
 	}
-	return invoices
+
+	return e.NewBasicInvoice(invoice), nil
 }

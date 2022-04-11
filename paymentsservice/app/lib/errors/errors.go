@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrInvoiceNotFound = errors.New("invoice not found")
+	ErrNotFound        = errors.New("not found")
 )
 
 func IsNotFound(err error) bool {

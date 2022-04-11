@@ -17,7 +17,6 @@ func New(
 
 	paymentsService := paymentsService{
 		paymentsStore: paymentsStore,
-		invoicesStore: invoicesStore,
 	}
 
 	invoicesService := invoicesService{

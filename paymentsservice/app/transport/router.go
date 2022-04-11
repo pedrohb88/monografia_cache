@@ -2,23 +2,27 @@ package transport
 
 import (
 	"monografia/service"
+	"monografia/transport/entity"
+	pb "monografia/transport/proto"
 
-	"github.com/go-chi/chi/v5"
+	"google.golang.org/grpc"
 )
 
-func NewRouter(srv service.Service) *chi.Mux {
-	r := chi.NewRouter()
+type server struct {
+	pb.UnimplementedRouterServer
+	service service.Service
+	entity  *entity.Entity
+}
 
-	payments := &Payments{service: &srv}
-	invoices := &Invoices{service: &srv}
+func NewServer(srv service.Service, entity *entity.Entity) *grpc.Server {
 
-	// Payments
-	r.Get("/payments/{paymentID:[1-9][0-9]*}", payments.GetByID)
-	r.Post("/payments", payments.Create)
+	s := grpc.NewServer()
+	routerServer := &server{
+		service: srv,
+		entity:  entity,
+	}
 
-	// Invoices
-	r.Get("/invoices/{invoiceID:[1-9][0-9]*}", invoices.GetByID)
-	r.Post("/invoices", invoices.Create)
+	pb.RegisterRouterServer(s, routerServer)
 
-	return r
+	return s
 }

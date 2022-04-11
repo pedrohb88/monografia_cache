@@ -9,7 +9,7 @@ services:
       - default
     restart: always
     ports:
-      - "3306:3306"
+      - "3308:3306"
     healthcheck:
       test: ["CMD-SHELL", 'mysqladmin ping']
       interval: 1s
@@ -21,15 +21,19 @@ services:
       MYSQL_USER: "myuser"
       MYSQL_PASSWORD: "mypass"
     volumes:
-      - mysql_orders_database:/var/lib/mysql
+      - mysql_orders_database_cache:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
+  cache: 
+    image: memcached
+    ports: 
+      - "11211:11211"
   app:
     build:
       context: ./app
     ports:
-      - "3000:3000"
+      - "3335:3335"
     environment:
-      - DBCONN=myuser:mypass@tcp(db:3306)/database
+      - DBCONN=myuser:mypass@tcp(db:3308)/database
       - ENV=production
     depends_on:
       db: 
@@ -38,4 +42,4 @@ services:
 networks:
   default:
 volumes:
-  mysql_orders_database:
+  mysql_orders_database_cache:

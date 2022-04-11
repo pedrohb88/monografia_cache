@@ -1,9 +1,9 @@
 package model
 
 type Item struct {
-	ID        int     `json:"id"             db:"id"`
-	OrderID   int     `json:"order_id"       db:"order_id"`
-	ProductID int     `json:"product_id"     db:"product_id"`
-	Quantity  int     `json:"quantity"       db:"quantity"`
-	Price     float64 `json:"price"          db:"price"`
+	ID        int     `json:"id"`
+	OrderID   int     `json:"order_id"`
+	ProductID int     `json:"product_id"`
+	Quantity  int     `json:"quantity"`
+	Price     float64 `json:"price"`
 }

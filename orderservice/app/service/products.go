@@ -1,33 +1,36 @@
 package service
 
 import (
+	"monografia/lib/errors"
 	"monografia/model"
 	"monografia/store/products"
-	"monografia/transport/entity"
 )
 
 type productsService struct {
 	productsStore products.Products
 }
 
-func (p *productsService) GetAll() ([]*entity.Product, error) {
+func (p *productsService) GetAll() ([]*model.Product, error) {
 
-	productsModels, err := p.productsStore.GetAll()
+	ids, err := p.productsStore.GetAllIDs()
 	if err != nil {
 		return nil, err
 	}
 
-	return entity.NewProducts(productsModels), nil
+	return p.productsStore.GetByIDs(ids...)
 }
 
-func (p *productsService) GetByID(productID int) (*entity.Product, error) {
+func (p *productsService) GetByID(productID int) (*model.Product, error) {
 
-	productModel, err := p.productsStore.GetByID(productID)
+	products, err := p.productsStore.GetByIDs(productID)
 	if err != nil {
 		return nil, err
 	}
+	if len(products) == 0 {
+		return nil, errors.ErrNotFound
+	}
 
-	return entity.NewBasicProduct(productModel), nil
+	return products[0], nil
 }
 
 func (p *productsService) Create(product *model.Product) error {

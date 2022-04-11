@@ -1,13 +1,11 @@
 package service
 
 import (
-	"database/sql"
-	"monografia/errors"
+	"monografia/lib/errors"
 	"monografia/model"
 	"monografia/store/items"
 	"monografia/store/orders"
 	"monografia/store/products"
-	"monografia/transport/entity"
 )
 
 type ordersService struct {
@@ -16,26 +14,25 @@ type ordersService struct {
 	productsStore products.Products
 }
 
-func (o *ordersService) GetByUserID(userID int) ([]*entity.Order, error) {
-
-	ordersModels, err := o.ordersStore.GetByUserID(userID)
+func (o *ordersService) GetByID(orderID int) (*model.Order, error) {
+	orders, err := o.ordersStore.GetByIDs(orderID)
 	if err != nil {
 		return nil, err
 	}
+	if len(orders) == 0 {
+		return nil, errors.ErrNotFound
+	}
 
-	return entity.NewOrders(ordersModels), nil
+	return orders[0], nil
 }
 
-func (o *ordersService) GetByID(orderID int) (*entity.Order, error) {
-	orderModels, err := o.ordersStore.GetByID(orderID)
-	if len(orderModels) == 0 {
-		return nil, sql.ErrNoRows
-	}
+func (o *ordersService) GetByUserID(userID int) ([]*model.Order, error) {
+	ids, err := o.ordersStore.GetIDsByUser(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return entity.NewOrders(orderModels)[0], nil
+	return o.ordersStore.GetByIDs(ids...)
 }
 
 func (o *ordersService) Create(order *model.Order) error {
@@ -44,7 +41,7 @@ func (o *ordersService) Create(order *model.Order) error {
 
 func (o *ordersService) AddItem(item *model.Item) error {
 
-	_, err := o.productsStore.GetByID(item.ProductID)
+	_, err := o.productsStore.GetByIDs(item.ProductID)
 	if errors.IsNotFound(err) {
 		return errors.ErrProductNotFound
 	}

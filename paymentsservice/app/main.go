@@ -31,6 +31,6 @@ func main() {
 	// Transport
 	router := transport.NewRouter(service)
 
-	log.Default().Println("Running server on port :4444")
-	http.ListenAndServe(":4444", router)
+	log.Default().Println("Running server on port :3336")
+	http.ListenAndServe(":3336", router)
 }

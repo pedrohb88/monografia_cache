@@ -1,25 +1,23 @@
 package entity
 
-import "monografia/model"
+import (
+	"monografia/model"
+	pb "monografia/transport/proto"
+)
 
-type Product struct {
-	ID    int     `json:"id"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
-}
-
-func NewBasicProduct(p *model.Product) *Product {
-	return &Product{
-		ID:    p.ID,
-		Name:  p.Name,
-		Price: p.Price,
+func (e *Entity) NewBasicProduct(m *model.Product) *pb.Product {
+	return &pb.Product{
+		Id:    int64(m.ID),
+		Name:  m.Name,
+		Price: float32(m.Price),
 	}
 }
 
-func NewProducts(models []*model.Product) []*Product {
-	products := make([]*Product, len(models))
-	for i, m := range models {
-		products[i] = NewBasicProduct(m)
+func (e *Entity) NewProductByID(productID int) (*pb.Product, error) {
+	product, err := e.service.Products.GetByID(productID)
+	if err != nil {
+		return nil, err
 	}
-	return products
+
+	return e.NewBasicProduct(product), nil
 }

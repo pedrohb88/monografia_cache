@@ -1,57 +1,53 @@
 package entity
 
-import "monografia/model"
+import (
+	"errors"
+	"fmt"
+	libErrors "monografia/lib/errors"
+	"monografia/model"
+	pb "monografia/transport/proto"
+)
 
-type Order struct {
-	ID            int     `json:"id"`
-	UserID        int     `json:"user_id"`
-	ItemsQuantity int     `json:"items_quantity"`
-	Price         float64 `json:"price"`
-	Items         []*Item `json:"items"`
-}
-
-func NewBasicOrder(model model.Order) *Order {
-	return &Order{
-		ID:            model.ID,
-		UserID:        model.UserID,
-		ItemsQuantity: model.ItemsQuantity,
-		Price:         model.Price,
-	}
-}
-
-func NewOrders(models []model.Order) []*Order {
-
-	var orders []*Order
-
-	var currentOrder *Order
-	for _, model := range models {
-
-		if currentOrder == nil || model.ID != currentOrder.ID {
-			currentOrder = NewBasicOrder(model)
-			orders = append(orders, currentOrder)
-		}
-
-		if model.ItemID == nil {
-			continue
-		}
-
-		item := &Item{
-			ID:       *model.ItemID,
-			OrderID:  model.ID,
-			Quantity: *model.ItemQuantity,
-			Price:    *model.ItemPrice,
-		}
-
-		product := &Product{
-			ID:    *model.ProductID,
-			Name:  *model.ProductName,
-			Price: *model.ProductPrice,
-		}
-
-		item.Product = product
-
-		currentOrder.Items = append(currentOrder.Items, item)
+func (e *Entity) NewOrderByID(orderID int) (*pb.Order, error) {
+	orderModel, err := e.service.Orders.GetByID(orderID)
+	if err != nil {
+		fmt.Println("um")
+		return nil, err
 	}
 
-	return orders
+	itemsModels, err := e.service.Items.GetByOrder(orderID)
+	if err != nil && !errors.Is(err, libErrors.ErrNotFound) {
+		fmt.Println("dois")
+
+		return nil, err
+	}
+
+	items := make([]*pb.Item, len(itemsModels))
+	for i, m := range itemsModels {
+		item, err := e.NewItemByID(m.ID)
+		if err != nil {
+			return nil, err
+		}
+		items[i] = item
+	}
+
+	order := e.NewBasicOrder(orderModel)
+	order.Items = items
+
+	return order, nil
+}
+
+func (e *Entity) NewBasicOrder(m *model.Order) *pb.Order {
+	var paymentID int
+	if m.PaymentID != nil {
+		paymentID = *m.PaymentID
+	}
+
+	return &pb.Order{
+		Id:            int64(m.ID),
+		UserId:        int64(m.UserID),
+		ItemsQuantity: int64(m.ItemsQuantity),
+		Price:         float32(m.Price),
+		PaymentId:     int64(paymentID),
+	}
 }

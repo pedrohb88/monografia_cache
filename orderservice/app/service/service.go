@@ -8,6 +8,7 @@ import (
 
 type Service struct {
 	Orders   ordersService
+	Items    itemsService
 	Products productsService
 }
 
@@ -23,12 +24,17 @@ func New(
 		productsStore: productsStore,
 	}
 
+	itemsService := itemsService{
+		itemsStore: itemsStore,
+	}
+
 	productsService := productsService{
 		productsStore: productsStore,
 	}
 
 	return Service{
 		Orders:   ordersService,
+		Items:    itemsService,
 		Products: productsService,
 	}
 }

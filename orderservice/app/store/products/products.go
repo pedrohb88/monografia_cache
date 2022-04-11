@@ -3,23 +3,23 @@ package products
 import (
 	"database/sql"
 	"fmt"
+	db "monografia/lib/database"
 	"monografia/model"
 
 	"github.com/go-gorp/gorp"
 )
 
 var (
-	queryProductsBase = `
+	queryAllIDs = `SELECT id FROM products`
+
+	queryProductsByIDs = `
 	SELECT 
 		p.id AS ID,
 		p.name AS Name,
 		p.price AS Price
 	FROM products p
-	%s`
-
-	all = fmt.Sprintf(queryProductsBase, "")
-
-	byID = fmt.Sprintf(queryProductsBase, `WHERE p.id = ?`)
+	WHERE p.id IN(%s)
+	`
 
 	execInsert = `
 	INSERT INTO products(name, price)
@@ -30,8 +30,8 @@ var (
 )
 
 type Products interface {
-	GetAll() ([]*model.Product, error)
-	GetByID(productID int) (*model.Product, error)
+	GetAllIDs() ([]int, error)
+	GetByIDs(productIDs ...int) ([]*model.Product, error)
 	Create(product *model.Product) error
 	Delete(productID int) error
 }
@@ -44,20 +44,32 @@ func New(db *gorp.DbMap) Products {
 	return &products{db: db}
 }
 
-func (p *products) GetAll() ([]*model.Product, error) {
-	var products []*model.Product
-
-	_, err := p.db.Select(&products, all)
-	return products, err
+func (p *products) GetAllIDs() ([]int, error) {
+	var ids []int
+	_, err := p.db.Select(&ids, queryAllIDs)
+	return ids, err
 }
 
-func (p *products) GetByID(productID int) (*model.Product, error) {
-	var product model.Product
-	err := p.db.SelectOne(&product, byID, productID)
+func (p *products) GetByIDs(productIDs ...int) ([]*model.Product, error) {
+
+	if len(productIDs) == 0 {
+		return nil, nil
+	}
+
+	var products []*model.Product
+
+	query := fmt.Sprintf(queryProductsByIDs, db.RepeatIntArgs(productIDs...))
+
+	iIDS := make([]interface{}, len(productIDs))
+	for i, id := range productIDs {
+		iIDS[i] = id
+	}
+
+	_, err := p.db.Select(&products, query, iIDS...)
 	if err != nil {
 		return nil, err
 	}
-	return &product, nil
+	return products, nil
 }
 
 func (p *products) Create(product *model.Product) error {

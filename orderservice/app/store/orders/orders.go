@@ -2,35 +2,25 @@ package orders
 
 import (
 	"fmt"
+	db "monografia/lib/database"
 	"monografia/model"
 
 	"github.com/go-gorp/gorp"
 )
 
 var (
-	queryOrdersBase = `
+	queryIDsByUser = `SELECT id FROM orders WHERE user_id = ?`
+
+	queryByIDs = `
 	SELECT 
 		o.id AS ID, 
 		o.user_id AS UserID, 
 		o.items_quantity AS ItemsQuantity, 
 		o.price AS Price,
-		i.id AS ItemID,
-		i.quantity AS ItemQuantity,
-		i.price AS ItemPrice,
-		p.id AS ProductID,
-		p.name AS ProductName,
-		p.price AS ProductPrice
+		o.payment_id AS PaymentID
 	FROM orders o
-	INNER JOIN items i
-		ON i.order_id = o.id
-	INNER JOIN products p
-		ON i.product_id = p.id
-	%s
+	WHERE o.id IN (%s)
 	`
-
-	byUserID = fmt.Sprintf(queryOrdersBase, `WHERE o.user_id = ?`)
-
-	byID = fmt.Sprintf(queryOrdersBase, `WHERE o.id = ?`)
 
 	execInsertOrder = `
 	INSERT INTO orders(user_id, items_quantity, price)
@@ -39,8 +29,8 @@ var (
 )
 
 type Orders interface {
-	GetByUserID(userID int) ([]model.Order, error)
-	GetByID(orderID int) ([]model.Order, error)
+	GetIDsByUser(userID int) ([]int, error)
+	GetByIDs(orderIDs ...int) ([]*model.Order, error)
 	Create(order *model.Order) error
 }
 
@@ -52,18 +42,33 @@ func New(db *gorp.DbMap) Orders {
 	return &orders{db: db}
 }
 
-func (o *orders) GetByUserID(userID int) ([]model.Order, error) {
-	var orders []model.Order
-
-	_, err := o.db.Select(&orders, byUserID, userID)
-	return orders, err
+func (o *orders) GetIDsByUser(userID int) ([]int, error) {
+	fmt.Println("pegando os ids de orders no repo")
+	var ids []int
+	_, err := o.db.Select(&ids, queryIDsByUser, userID)
+	return ids, err
 }
 
-func (o *orders) GetByID(orderID int) ([]model.Order, error) {
-	var orders []model.Order
+func (o *orders) GetByIDs(orderIDs ...int) ([]*model.Order, error) {
+	fmt.Println("pegando as orders no repo")
+	if len(orderIDs) == 0 {
+		return nil, nil
+	}
 
-	_, err := o.db.Select(&orders, byID, orderID)
-	return orders, err
+	var orders []*model.Order
+
+	query := fmt.Sprintf(queryByIDs, db.RepeatIntArgs(orderIDs...))
+
+	iIDS := make([]interface{}, len(orderIDs))
+	for i, id := range orderIDs {
+		iIDS[i] = id
+	}
+
+	_, err := o.db.Select(&orders, query, iIDS...)
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
 }
 
 func (o *orders) Create(order *model.Order) error {

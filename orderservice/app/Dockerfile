@@ -8,5 +8,6 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /main ./
 RUN chmod +x ./main
+RUN apk install -y protobuf-compiler
 EXPOSE 8080
 CMD ./main

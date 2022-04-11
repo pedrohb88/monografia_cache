@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrProductNotFound = errors.New("product not found")
+	ErrNotFound        = errors.New("not found")
 )
 
 func IsNotFound(err error) bool {

@@ -27,10 +27,13 @@ type RouterClient interface {
 	CreateOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
 	AddItem(ctx context.Context, in *Item, opts ...grpc.CallOption) (*Order, error)
 	RemoveItem(ctx context.Context, in *ByIDRequest, opts ...grpc.CallOption) (*Order, error)
+	PayOrder(ctx context.Context, in *ByIDRequest, opts ...grpc.CallOption) (*Order, error)
 	GetAllProducts(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Products, error)
 	GetProductByID(ctx context.Context, in *ByIDRequest, opts ...grpc.CallOption) (*Product, error)
 	CreateProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Product, error)
 	DeleteProduct(ctx context.Context, in *ByIDRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
+	GetPaymentByID(ctx context.Context, in *ByIDRequest, opts ...grpc.CallOption) (*Payment, error)
+	CreatePayment(ctx context.Context, in *Payment, opts ...grpc.CallOption) (*Payment, error)
 }
 
 type routerClient struct {
@@ -86,6 +89,15 @@ func (c *routerClient) RemoveItem(ctx context.Context, in *ByIDRequest, opts ...
 	return out, nil
 }
 
+func (c *routerClient) PayOrder(ctx context.Context, in *ByIDRequest, opts ...grpc.CallOption) (*Order, error) {
+	out := new(Order)
+	err := c.cc.Invoke(ctx, "/router.Router/PayOrder", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *routerClient) GetAllProducts(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Products, error) {
 	out := new(Products)
 	err := c.cc.Invoke(ctx, "/router.Router/GetAllProducts", in, out, opts...)
@@ -122,6 +134,24 @@ func (c *routerClient) DeleteProduct(ctx context.Context, in *ByIDRequest, opts 
 	return out, nil
 }
 
+func (c *routerClient) GetPaymentByID(ctx context.Context, in *ByIDRequest, opts ...grpc.CallOption) (*Payment, error) {
+	out := new(Payment)
+	err := c.cc.Invoke(ctx, "/router.Router/GetPaymentByID", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *routerClient) CreatePayment(ctx context.Context, in *Payment, opts ...grpc.CallOption) (*Payment, error) {
+	out := new(Payment)
+	err := c.cc.Invoke(ctx, "/router.Router/CreatePayment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RouterServer is the server API for Router service.
 // All implementations must embed UnimplementedRouterServer
 // for forward compatibility
@@ -131,10 +161,13 @@ type RouterServer interface {
 	CreateOrder(context.Context, *Order) (*Order, error)
 	AddItem(context.Context, *Item) (*Order, error)
 	RemoveItem(context.Context, *ByIDRequest) (*Order, error)
+	PayOrder(context.Context, *ByIDRequest) (*Order, error)
 	GetAllProducts(context.Context, *EmptyRequest) (*Products, error)
 	GetProductByID(context.Context, *ByIDRequest) (*Product, error)
 	CreateProduct(context.Context, *Product) (*Product, error)
 	DeleteProduct(context.Context, *ByIDRequest) (*EmptyResponse, error)
+	GetPaymentByID(context.Context, *ByIDRequest) (*Payment, error)
+	CreatePayment(context.Context, *Payment) (*Payment, error)
 	mustEmbedUnimplementedRouterServer()
 }
 
@@ -157,6 +190,9 @@ func (UnimplementedRouterServer) AddItem(context.Context, *Item) (*Order, error)
 func (UnimplementedRouterServer) RemoveItem(context.Context, *ByIDRequest) (*Order, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveItem not implemented")
 }
+func (UnimplementedRouterServer) PayOrder(context.Context, *ByIDRequest) (*Order, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PayOrder not implemented")
+}
 func (UnimplementedRouterServer) GetAllProducts(context.Context, *EmptyRequest) (*Products, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllProducts not implemented")
 }
@@ -168,6 +204,12 @@ func (UnimplementedRouterServer) CreateProduct(context.Context, *Product) (*Prod
 }
 func (UnimplementedRouterServer) DeleteProduct(context.Context, *ByIDRequest) (*EmptyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProduct not implemented")
+}
+func (UnimplementedRouterServer) GetPaymentByID(context.Context, *ByIDRequest) (*Payment, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPaymentByID not implemented")
+}
+func (UnimplementedRouterServer) CreatePayment(context.Context, *Payment) (*Payment, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePayment not implemented")
 }
 func (UnimplementedRouterServer) mustEmbedUnimplementedRouterServer() {}
 
@@ -272,6 +314,24 @@ func _Router_RemoveItem_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Router_PayOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RouterServer).PayOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/router.Router/PayOrder",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RouterServer).PayOrder(ctx, req.(*ByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Router_GetAllProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(EmptyRequest)
 	if err := dec(in); err != nil {
@@ -344,6 +404,42 @@ func _Router_DeleteProduct_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Router_GetPaymentByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RouterServer).GetPaymentByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/router.Router/GetPaymentByID",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RouterServer).GetPaymentByID(ctx, req.(*ByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Router_CreatePayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Payment)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RouterServer).CreatePayment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/router.Router/CreatePayment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RouterServer).CreatePayment(ctx, req.(*Payment))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Router_ServiceDesc is the grpc.ServiceDesc for Router service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -372,6 +468,10 @@ var Router_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Router_RemoveItem_Handler,
 		},
 		{
+			MethodName: "PayOrder",
+			Handler:    _Router_PayOrder_Handler,
+		},
+		{
 			MethodName: "GetAllProducts",
 			Handler:    _Router_GetAllProducts_Handler,
 		},
@@ -386,6 +486,14 @@ var Router_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteProduct",
 			Handler:    _Router_DeleteProduct_Handler,
+		},
+		{
+			MethodName: "GetPaymentByID",
+			Handler:    _Router_GetPaymentByID_Handler,
+		},
+		{
+			MethodName: "CreatePayment",
+			Handler:    _Router_CreatePayment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

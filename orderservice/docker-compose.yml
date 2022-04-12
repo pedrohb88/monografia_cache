@@ -31,10 +31,12 @@ services:
     build:
       context: ./app
     ports:
-      - "3335:3335"
+      - "50051:50051"
     environment:
-      - DBCONN=myuser:mypass@tcp(db:3308)/database
+      - DBCONN=myuser:mypass@tcp(db:3306)/database
       - ENV=production
+      - CACHECONN=cache:11211
+      - PAYMENTS_URL=localhost:50052
     depends_on:
       db: 
         condition: service_healthy

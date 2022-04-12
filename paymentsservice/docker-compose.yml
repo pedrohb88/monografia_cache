@@ -31,10 +31,11 @@ services:
     build:
       context: ./app
     ports:
-      - "3335:3335"
+      - "50052:50052"
     environment:
-      - DBCONN=myuser:mypass@tcp(db:3309)/database
-      - ENV=invoiceion
+      - DBCONN=myuser:mypass@tcp(db:3306)/database
+      - CACHECONN=cache:11211
+      - ENV=production
     depends_on:
       db: 
         condition: service_healthy

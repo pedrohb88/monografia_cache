@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/joho/godotenv"
 )
 
 type Cache struct {
@@ -15,14 +14,6 @@ type Cache struct {
 }
 
 func New() (*Cache, error) {
-
-	if os.Getenv("ENV") != "invoiceion" {
-		err := godotenv.Load()
-		if err != nil {
-			return nil, fmt.Errorf("error loading config; %w", err)
-		}
-	}
-
 	mc := memcache.New(os.Getenv("CACHECONN"))
 	return &Cache{
 		client: mc,

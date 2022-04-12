@@ -3,8 +3,10 @@ package main
 import (
 	"log"
 	"net"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 
 	itemsCache "monografia/cache/items"
 	ordersCache "monografia/cache/orders"
@@ -14,12 +16,20 @@ import (
 	srv "monografia/service"
 	"monografia/store/items"
 	"monografia/store/orders"
+	"monografia/store/payments"
 	"monografia/store/products"
 	"monografia/transport"
 	"monografia/transport/entity"
 )
 
 func main() {
+
+	if os.Getenv("ENV") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatalf("error loading config; %s", err.Error())
+		}
+	}
 
 	// Cache
 	cache, err := cache.New()
@@ -38,8 +48,11 @@ func main() {
 	productsStore := productsCache.New(cache, products.New(&db))
 	itemsStore := itemsCache.New(cache, items.New(&db))
 
+	// Stores
+	paymentsStore := payments.New()
+
 	// Services
-	service := srv.New(ordersStore, productsStore, itemsStore)
+	service := srv.New(ordersStore, productsStore, itemsStore, paymentsStore)
 
 	entity := entity.New(service)
 

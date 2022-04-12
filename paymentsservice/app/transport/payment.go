@@ -12,11 +12,16 @@ func (s *server) GetPaymentByID(ctx context.Context, in *pb.ByIDRequest) (*pb.Pa
 
 func (s *server) CreatePayment(ctx context.Context, in *pb.Payment) (*pb.Payment, error) {
 
-	invoiceID := int(in.InvoiceId)
+	inInvoiceID := int(in.InvoiceId)
+	var invoiceID *int
+
+	if inInvoiceID != 0 {
+		invoiceID = &inInvoiceID
+	}
 
 	payment := model.Payment{
 		Amount:    float64(in.Amount),
-		InvoiceID: &invoiceID,
+		InvoiceID: invoiceID,
 	}
 	err := s.service.Payments.Create(&payment)
 	if err != nil {

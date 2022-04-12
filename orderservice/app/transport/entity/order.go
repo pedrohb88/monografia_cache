@@ -2,7 +2,6 @@ package entity
 
 import (
 	"errors"
-	"fmt"
 	libErrors "monografia/lib/errors"
 	"monografia/model"
 	pb "monografia/transport/proto"
@@ -11,14 +10,11 @@ import (
 func (e *Entity) NewOrderByID(orderID int) (*pb.Order, error) {
 	orderModel, err := e.service.Orders.GetByID(orderID)
 	if err != nil {
-		fmt.Println("um")
 		return nil, err
 	}
 
 	itemsModels, err := e.service.Items.GetByOrder(orderID)
 	if err != nil && !errors.Is(err, libErrors.ErrNotFound) {
-		fmt.Println("dois")
-
 		return nil, err
 	}
 
@@ -33,6 +29,31 @@ func (e *Entity) NewOrderByID(orderID int) (*pb.Order, error) {
 
 	order := e.NewBasicOrder(orderModel)
 	order.Items = items
+
+	if order.PaymentId != 0 {
+		paymentModel, err := e.service.Orders.GetPayment(int(order.PaymentId))
+		if err != nil {
+			return nil, err
+		}
+
+		var invoice *pb.Invoice
+		var invoiceID int64
+		if paymentModel.Invoice != nil {
+			invoice = &pb.Invoice{
+				Id:   int64(paymentModel.Invoice.ID),
+				Code: paymentModel.Invoice.Code,
+				Link: paymentModel.Invoice.Link,
+			}
+			invoiceID = invoice.Id
+		}
+
+		order.Payment = &pb.Payment{
+			Id:        int64(paymentModel.ID),
+			Amount:    float32(paymentModel.Amount),
+			InvoiceId: invoiceID,
+			Invoice:   invoice,
+		}
+	}
 
 	return order, nil
 }

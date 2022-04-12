@@ -26,12 +26,15 @@ var (
 	INSERT INTO orders(user_id, items_quantity, price)
 	VALUES (?, ?, ?)
 	`
+
+	execUpdatePaymentID = `UPDATE orders SET payment_id = ? WHERE id = ?`
 )
 
 type Orders interface {
 	GetIDsByUser(userID int) ([]int, error)
 	GetByIDs(orderIDs ...int) ([]*model.Order, error)
 	Create(order *model.Order) error
+	UpdatePaymentID(orderID, paymentID int) error
 }
 
 type orders struct {
@@ -85,4 +88,12 @@ func (o *orders) Create(order *model.Order) error {
 	lastID, _ := res.LastInsertId()
 	order.ID = int(lastID)
 	return nil
+}
+
+func (o *orders) UpdatePaymentID(orderID, paymentID int) error {
+	_, err := o.db.Exec(execUpdatePaymentID,
+		paymentID,
+		orderID,
+	)
+	return err
 }

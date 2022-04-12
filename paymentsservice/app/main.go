@@ -3,8 +3,10 @@ package main
 import (
 	"log"
 	"net"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 
 	invoicesCache "monografia/cache/invoices"
 	paymentsCache "monografia/cache/payments"
@@ -18,6 +20,14 @@ import (
 )
 
 func main() {
+
+	if os.Getenv("ENV") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatalf("error loading config; %s", err.Error())
+			return
+		}
+	}
 
 	// Cache
 	cache, err := cache.New()

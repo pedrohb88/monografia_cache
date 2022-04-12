@@ -75,3 +75,13 @@ func (s *server) RemoveItem(ctx context.Context, in *pb.ByIDRequest) (*pb.Order,
 
 	return s.entity.NewOrderByID(item.OrderID)
 }
+
+func (s *server) PayOrder(ctx context.Context, in *pb.ByIDRequest) (*pb.Order, error) {
+
+	err := s.service.Orders.Pay(int(in.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return s.entity.NewOrderByID(int(in.Id))
+}

@@ -13,11 +13,15 @@ service Router {
   rpc CreateOrder (Order) returns (Order) {}
   rpc AddItem (Item) returns (Order) {}
   rpc RemoveItem (ByIDRequest) returns (Order) {}
+  rpc PayOrder (ByIDRequest) returns (Order) {}
 
   rpc GetAllProducts (EmptyRequest) returns (Products) {}
   rpc GetProductByID (ByIDRequest) returns (Product) {}
   rpc CreateProduct (Product) returns (Product) {}
   rpc DeleteProduct (ByIDRequest) returns (EmptyResponse) {}
+
+  rpc GetPaymentByID (ByIDRequest) returns (Payment) {}
+  rpc CreatePayment (Payment) returns (Payment) {}
 }
 
 message EmptyRequest {}
@@ -48,6 +52,7 @@ message Order {
   float price = 4;
   int64 payment_id = 5;
   repeated Item items = 6;
+  Payment payment = 7;
 }
 
 message Item {
@@ -57,4 +62,17 @@ message Item {
   int64 quantity = 4;
   float price = 5;
   Product product = 6;
+}
+
+message Payment {
+  int64 id = 1;
+  float amount = 2;
+  int64 invoice_id = 3;
+  Invoice invoice = 4;
+}
+
+message Invoice {
+  int64 id = 1;
+  string code = 2;
+  string link = 3;
 }

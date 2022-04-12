@@ -103,3 +103,7 @@ func (o *Orders) Create(order *model.Order) error {
 
 	return o.cache.Delete(byUserCacheKey(order.UserID))
 }
+
+func (o *Orders) UpdatePaymentID(orderID, paymentID int) error {
+	return o.store.UpdatePaymentID(orderID, paymentID)
+}

@@ -10,3 +10,12 @@ CREATE TABLE IF NOT EXISTS payments (
     invoice_id INTEGER NULL, 
     FOREIGN KEY(invoice_id) REFERENCES invoices(id)
 );
+
+CREATE TABLE IF NOT EXISTS benchmark (
+    test INTEGER, 
+    resource ENUM('net', 'cpu', 'time'),
+    x FLOAT, 
+    y FLOAT
+);
+
+CREATE INDEX resource ON benchmark (resource);

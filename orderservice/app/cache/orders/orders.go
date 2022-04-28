@@ -1,7 +1,6 @@
 package orders
 
 import (
-	"fmt"
 	"monografia/lib/cache"
 	"monografia/model"
 	store "monografia/store/orders"
@@ -37,8 +36,6 @@ func New(cache *cache.Cache, store store.Orders) store.Orders {
 }
 
 func (p *Orders) GetIDsByUser(userID int) ([]int, error) {
-	fmt.Println("pegando ids de orders da cache")
-
 	var ids []int
 
 	err := p.cache.GetSet(byUserCacheKey(userID), &ids, func() (interface{}, error) {
@@ -49,8 +46,6 @@ func (p *Orders) GetIDsByUser(userID int) ([]int, error) {
 }
 
 func (p *Orders) GetByIDs(orderIDs ...int) ([]*model.Order, error) {
-	fmt.Println("pegando orders ns cache")
-
 	ordersMap := map[string]*model.Order{}
 	keys := byIDsCacheKeys(orderIDs...)
 

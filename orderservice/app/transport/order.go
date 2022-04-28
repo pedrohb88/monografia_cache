@@ -6,12 +6,13 @@ import (
 	pb "monografia/transport/proto"
 )
 
-func (s *server) GetOrderByID(ctx context.Context, in *pb.ByIDRequest) (*pb.Order, error) {
-	return s.entity.NewOrderByID(int(in.Id))
+func (s *server) GetOrderByID(
+	ctx context.Context, in *pb.ByIDRequest,
+) (*pb.Order, error) {
+	return s.entity.NewOrderByID(ctx, int(in.Id))
 }
 
 func (s *server) GetOrdersByUserID(ctx context.Context, in *pb.ByIDRequest) (*pb.Orders, error) {
-
 	ordersModels, err := s.service.Orders.GetByUserID(int(in.Id))
 	if err != nil {
 		return nil, err
@@ -20,7 +21,7 @@ func (s *server) GetOrdersByUserID(ctx context.Context, in *pb.ByIDRequest) (*pb
 	orders := make([]*pb.Order, len(ordersModels))
 	for i, m := range ordersModels {
 
-		order, err := s.entity.NewOrderByID(m.ID)
+		order, err := s.entity.NewOrderByID(ctx, m.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +59,7 @@ func (s *server) AddItem(ctx context.Context, in *pb.Item) (*pb.Order, error) {
 		return nil, err
 	}
 
-	return s.entity.NewOrderByID(int(in.OrderId))
+	return s.entity.NewOrderByID(ctx, int(in.OrderId))
 }
 
 func (s *server) RemoveItem(ctx context.Context, in *pb.ByIDRequest) (*pb.Order, error) {
@@ -73,15 +74,15 @@ func (s *server) RemoveItem(ctx context.Context, in *pb.ByIDRequest) (*pb.Order,
 		return nil, err
 	}
 
-	return s.entity.NewOrderByID(item.OrderID)
+	return s.entity.NewOrderByID(ctx, item.OrderID)
 }
 
 func (s *server) PayOrder(ctx context.Context, in *pb.ByIDRequest) (*pb.Order, error) {
 
-	err := s.service.Orders.Pay(int(in.Id))
+	err := s.service.Orders.Pay(ctx, int(in.Id))
 	if err != nil {
 		return nil, err
 	}
 
-	return s.entity.NewOrderByID(int(in.Id))
+	return s.entity.NewOrderByID(ctx, int(in.Id))
 }

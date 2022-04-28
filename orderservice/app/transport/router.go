@@ -16,7 +16,10 @@ type server struct {
 
 func NewServer(srv service.Service, entity *entity.Entity) *grpc.Server {
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(Benchmark()),
+	)
+
 	routerServer := &server{
 		service: srv,
 		entity:  entity,

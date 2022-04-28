@@ -1,13 +1,14 @@
 package entity
 
 import (
+	"context"
 	"errors"
 	libErrors "monografia/lib/errors"
 	"monografia/model"
 	pb "monografia/transport/proto"
 )
 
-func (e *Entity) NewOrderByID(orderID int) (*pb.Order, error) {
+func (e *Entity) NewOrderByID(ctx context.Context, orderID int) (*pb.Order, error) {
 	orderModel, err := e.service.Orders.GetByID(orderID)
 	if err != nil {
 		return nil, err
@@ -31,7 +32,7 @@ func (e *Entity) NewOrderByID(orderID int) (*pb.Order, error) {
 	order.Items = items
 
 	if order.PaymentId != 0 {
-		paymentModel, err := e.service.Orders.GetPayment(int(order.PaymentId))
+		paymentModel, err := e.service.Orders.GetPayment(ctx, int(order.PaymentId))
 		if err != nil {
 			return nil, err
 		}

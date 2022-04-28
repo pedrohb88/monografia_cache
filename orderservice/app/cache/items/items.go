@@ -1,7 +1,6 @@
 package items
 
 import (
-	"fmt"
 	"monografia/lib/cache"
 	"monografia/model"
 	store "monografia/store/items"
@@ -37,7 +36,6 @@ func New(cache *cache.Cache, store store.Items) store.Items {
 }
 
 func (i *Items) GetIDsByOrder(orderID int) ([]int, error) {
-	fmt.Println("pegando ids de items na cache")
 
 	var ids []int
 
@@ -49,7 +47,6 @@ func (i *Items) GetIDsByOrder(orderID int) ([]int, error) {
 }
 
 func (i *Items) GetByIDs(itemIDs ...int) ([]*model.Item, error) {
-	fmt.Println("pegando items na cache")
 
 	itemsMap := map[string]*model.Item{}
 	keys := byIDsCacheKeys(itemIDs...)

@@ -26,7 +26,6 @@ func (s *server) GetProductByID(ctx context.Context, in *pb.ByIDRequest) (*pb.Pr
 }
 
 func (s *server) CreateProduct(ctx context.Context, in *pb.Product) (*pb.Product, error) {
-
 	productModel := model.Product{
 		Name:  in.Name,
 		Price: float64(in.Price),

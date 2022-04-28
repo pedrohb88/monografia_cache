@@ -46,14 +46,12 @@ func New(db *gorp.DbMap) Orders {
 }
 
 func (o *orders) GetIDsByUser(userID int) ([]int, error) {
-	fmt.Println("pegando os ids de orders no repo")
 	var ids []int
 	_, err := o.db.Select(&ids, queryIDsByUser, userID)
 	return ids, err
 }
 
 func (o *orders) GetByIDs(orderIDs ...int) ([]*model.Order, error) {
-	fmt.Println("pegando as orders no repo")
 	if len(orderIDs) == 0 {
 		return nil, nil
 	}

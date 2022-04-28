@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"monografia/lib/errors"
 	"monografia/model"
 	"monografia/store/items"
@@ -58,14 +59,14 @@ func (o *ordersService) RemoveItem(itemID int) error {
 	return o.itemsStore.Delete(itemID)
 }
 
-func (o *ordersService) Pay(orderID int) error {
+func (o *ordersService) Pay(ctx context.Context, orderID int) error {
 
 	order, err := o.GetByID(orderID)
 	if err != nil {
 		return err
 	}
 
-	paymentID, err := o.paymentsStore.Create(order.Price)
+	paymentID, err := o.paymentsStore.Create(ctx, order.Price)
 	if err != nil {
 		return err
 	}
@@ -73,6 +74,6 @@ func (o *ordersService) Pay(orderID int) error {
 	return o.ordersStore.UpdatePaymentID(orderID, paymentID)
 }
 
-func (o *ordersService) GetPayment(paymentID int) (*model.Payment, error) {
-	return o.paymentsStore.GetByID(paymentID)
+func (o *ordersService) GetPayment(ctx context.Context, paymentID int) (*model.Payment, error) {
+	return o.paymentsStore.GetByID(ctx, paymentID)
 }

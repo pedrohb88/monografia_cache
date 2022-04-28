@@ -11,11 +11,12 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
 type Payments interface {
-	Create(amount float64) (int, error)
-	GetByID(paymentID int) (*model.Payment, error)
+	Create(ctx context.Context, amount float64) (int, error)
+	GetByID(ctx context.Context, paymentID int) (*model.Payment, error)
 }
 
 type payments struct {
@@ -28,8 +29,13 @@ func New() Payments {
 	}
 }
 
-func (p *payments) Create(amount float64) (int, error) {
-	fmt.Println("opaaaa")
+func (p *payments) Create(ctx context.Context, amount float64) (int, error) {
+
+	testID, reqID, err := getHeaders(ctx)
+	if err != nil {
+		return 0, err
+	}
+
 	conn, err := grpc.Dial(p.url, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return 0, err
@@ -39,6 +45,13 @@ func (p *payments) Create(amount float64) (int, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
+
+	md := metadata.New(map[string]string{
+		"x-test": testID,
+		"x-req":  reqID,
+	})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
 	payment, err := c.CreatePayment(ctx, &pb.Payment{
 		Amount: float32(amount),
 	})
@@ -50,7 +63,12 @@ func (p *payments) Create(amount float64) (int, error) {
 	return int(payment.Id), err
 }
 
-func (p *payments) GetByID(paymentID int) (*model.Payment, error) {
+func (p *payments) GetByID(ctx context.Context, paymentID int) (*model.Payment, error) {
+
+	testID, reqID, err := getHeaders(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	conn, err := grpc.Dial(p.url, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -60,6 +78,13 @@ func (p *payments) GetByID(paymentID int) (*model.Payment, error) {
 	c := pb.NewRouterClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
+
+	md := metadata.New(map[string]string{
+		"x-test": testID,
+		"x-req":  reqID,
+	})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
 	payment, err := c.GetPaymentByID(ctx, &pb.ByIDRequest{
 		Id: int64(paymentID),
 	})
@@ -84,4 +109,22 @@ func (p *payments) GetByID(paymentID int) (*model.Payment, error) {
 		InvoiceID: invoiceID,
 		Invoice:   invoice,
 	}, nil
+}
+
+func getHeaders(ctx context.Context) (string, string, error) {
+
+	if os.Getenv("ENV") != "production" {
+		return "", "", nil
+	}
+
+	testID := ctx.Value("x-test").(string)
+	if testID == "" {
+		return "", "", fmt.Errorf("missing x-test header")
+	}
+
+	reqID := ctx.Value("x-req").(string)
+	if reqID == "" {
+		return "", "", fmt.Errorf("missing x-req header")
+	}
+	return testID, reqID, nil
 }
